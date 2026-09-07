@@ -55,7 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //       &[(winner_wallet.into(), 1), (second_wallet.into(), 2)],
     //       /*transcript_hash=*/"0x…", /*session_nonce=*/42,
     //       /*chain_id=*/43113,
-    //       /*contract=*/"0xcabf7b626172fE55d54f03c346563671AbcC77f7").await?;
+    //       /*contract=*/"0x3BBb1812Ccafc4a8c849BfA340174a271e43B7D1").await?;
 
     // ═══ 6. CLAIM — trigger settlement ════════════════════════
     //   amp.multi_claim(&match_id).await?;
