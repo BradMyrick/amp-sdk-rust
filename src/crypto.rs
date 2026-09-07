@@ -85,7 +85,8 @@ pub fn build_ladder_typed_data(
         "MultiplayerLadder".into(),
         serde_json::json!([
             { "name": "matchId", "type": "bytes32" },
-            { "name": "gameId", "type": "uint256" },
+            // Contract typehash (AMPMultiplayer.sol): gameId is bytes32.
+            { "name": "gameId", "type": "bytes32" },
             { "name": "rankedPlacements", "type": "address[]" },
             { "name": "transcriptHash", "type": "bytes32" },
             { "name": "sessionNonce", "type": "uint256" },
@@ -101,7 +102,7 @@ pub fn build_ladder_typed_data(
 
     let message = serde_json::json!({
         "matchId": match_id,
-        "gameId": "1",
+        "gameId": format!("0x{}1", "0".repeat(63)),
         "rankedPlacements": ranked_placements,
         "transcriptHash": transcript_hash,
         "sessionNonce": session_nonce.to_string(),

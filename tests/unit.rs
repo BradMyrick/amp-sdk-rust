@@ -109,6 +109,28 @@ fn commit_hash_matches_cross_sdk_golden_vector() {
 }
 
 #[test]
+fn ladder_digest_matches_cross_sdk_golden_vector() {
+    // ethers-verified reference digest; identical in TS/C#/C++/Rust/Unreal.
+    let td = crypto::build_ladder_typed_data(
+        43113,
+        "0xcabf7b626172fE55d54f03c346563671AbcC77f7",
+        &format!("0x{}", "a".repeat(64)),
+        &vec![
+            "0x95CC495dF579981d3Ffa4a8f77B93A17563E077a".into(),
+            "0x79aDcEF0E2bdc030f5906aA80C6B50C3712c0064".into(),
+        ],
+        &format!("0x{}", "b".repeat(64)),
+        42,
+    )
+    .unwrap();
+    let digest = td.eip712_signing_hash().unwrap();
+    assert_eq!(
+        format!("0x{}", hex::encode(digest)),
+        "0x7e3467e6d14daf2c2ba195a1147c550a480c30c867c202b7b02e385a8e48123f"
+    );
+}
+
+#[test]
 fn exit_cert_message_matches_server_format() {
     // Load-bearing: the server recovers the signer from this exact string.
     let msg = crypto::build_exit_cert_message("m-42", 3, 1200, "0xabc");
