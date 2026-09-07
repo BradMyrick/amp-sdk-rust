@@ -91,3 +91,18 @@ fn signer_derives_canonical_address() {
         "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
     );
 }
+
+#[test]
+fn exit_cert_message_matches_server_format() {
+    // Load-bearing: the server recovers the signer from this exact string.
+    let msg = crypto::build_exit_cert_message("m-42", 3, 1200, "0xabc");
+    assert_eq!(
+        msg,
+        "AMP exit certificate\n\n\
+         Match: m-42\n\
+         Rank: 3\n\
+         Exit frame: 1200\n\
+         State hash: 0xabc\n\n\
+         This signature is free. It certifies your elimination and unlocks your reporting bond."
+    );
+}

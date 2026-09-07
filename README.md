@@ -51,6 +51,9 @@ async fn main() -> anyhow::Result<()> {
 | `get_match`, `match_history`, `report_match` | `/v1/matches/*` (EIP-191 auto-sign) |
 | `create_party`, `join_party`, `get_party`, `lock_party`, `disband_party` | `/v1/parties*` |
 | `multi_commit`, `multi_reveal`, `get_multi_match`, `multi_report`, `multi_claim` | `/v1/multi/*` (EIP-712 auto-sign) |
+| `submit_exit_cert`, `countersign_exit_cert` | `/v1/multi/*/exit*` death certs (EIP-191 auto-sign) |
+| `verify_escrow` | `/v1/matches/*/escrow/verify` for staked 1v1 |
+| `wait_for_match(timeout)` | One call: queue → wait → matchId (2s polling) |
 | `events()` | `/v1/ws` WebSocket with keepalive |
 
 The client is `Clone` and shareable across tasks (token state behind an `Arc<RwLock>`).
@@ -67,7 +70,7 @@ Cross-SDK test vectors (keccak256, commit hashes, EIP-712 domain) match the TS, 
 
 ## Tests
 
-8 tests: 7 unit (keccak vectors, salts, report messages, commit hashes, EIP-712 typed data shape, canonical address derivation) + 1 live integration (login → games → queue → bot match → report → party → WebSocket hello → logout).
+9 tests: 8 unit (keccak vectors, salts, report messages, commit hashes, EIP-712 typed data shape, canonical address derivation) + 1 live integration (login → games → queue → bot match → report → party → WebSocket hello → logout).
 
 ```sh
 cargo test                    # unit

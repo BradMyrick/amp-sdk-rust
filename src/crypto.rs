@@ -4,7 +4,7 @@
 //! matching the TS/C#/C++ SDKs byte-for-byte.
 
 use crate::{AmpError, Result};
-use alloy_primitives::{keccak256, Address, U256};
+use alloy_primitives::{keccak256, Address};
 use rand::RngCore;
 
 /// keccak256 as 0x-hex.
@@ -24,20 +24,36 @@ pub fn build_report_message(match_id: &str, result: &str) -> String {
     format!("AMP_REPORT:v1:{match_id}:{result}")
 }
 
-/// Commit-reveal hash: keccak256(pad32(address) ‖ pad32(stake) ‖ salt-bytes).
+/// EIP-191 message for a multiplayer exit certificate (death cert).
+/// Must match amp-server's `submit_exit_cert` format exactly.
+pub fn build_exit_cert_message(
+    match_id: &str,
+    rank: u32,
+    exit_frame: u64,
+    state_hash: &str,
+) -> String {
+    format!(
+        "AMP exit certificate\n\n\
+         Match: {match_id}\n\
+         Rank: {rank}\n\
+         Exit frame: {exit_frame}\n\
+         State hash: {state_hash}\n\n\
+         This signature is free. It certifies your elimination and unlocks your reporting bond."
+    )
+}
+
+/// Commit-reveal hash: keccak256(addr20 ‖ stake_u64_be(8) ‖ salt-utf8).
+/// Matches amp-server's `compute_commit` byte-for-byte — including the
+/// detail that the salt is hashed as its UTF-8 string bytes, not decoded.
 pub fn compute_commit_hash(wallet: &str, stake_wei: u128, salt: &str) -> Result<String> {
     let addr: Address = wallet
         .parse()
         .map_err(|e| AmpError::Crypto(format!("bad wallet address: {e}")))?;
-    let stake = U256::from(stake_wei);
-    let salt_bytes = hex::decode(salt.trim_start_matches("0x"))
-        .map_err(|e| AmpError::Crypto(format!("bad salt hex: {e}")))?;
 
-    let mut buf = Vec::with_capacity(32 + 32 + salt_bytes.len());
-    buf.extend_from_slice(&[0u8; 12]);
+    let mut buf = Vec::with_capacity(20 + 8 + salt.len());
     buf.extend_from_slice(addr.as_slice());
-    buf.extend_from_slice(&stake.to_be_bytes::<32>());
-    buf.extend_from_slice(&salt_bytes);
+    buf.extend_from_slice(&(stake_wei as u64).to_be_bytes());
+    buf.extend_from_slice(salt.as_bytes());
     Ok(keccak_hex(&buf))
 }
 

@@ -29,3 +29,7 @@ tokio-test = "0.4"
 [[example]]
 name = "quick_start"
 path = "examples/quick_start.rs"
+
+[[example]]
+name = "multiplayer"
+path = "examples/multiplayer.rs"

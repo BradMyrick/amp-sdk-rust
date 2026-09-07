@@ -255,20 +255,21 @@ impl AmpClient {
     pub async fn multi_commit(
         &self,
         game_id: &str,
-        stake_wei: u128,
+        stake_wei: u64,
         lobby_size: u32,
     ) -> Result<(Value, String)> {
         let wallet = self.wallet().await?;
         let salt = crypto::generate_salt();
-        let commit_hash = crypto::compute_commit_hash(&wallet, stake_wei, &salt)?;
+        let commit_hash = crypto::compute_commit_hash(&wallet, stake_wei as u128, &salt)?;
 
+        // stakeWei/lobbySize must be JSON numbers (serde i64/usize)
         let resp = self
             .post(
                 "/v1/multi/commit",
                 json!({
                     "gameId": game_id,
                     "commitHash": commit_hash,
-                    "stakeWei": stake_wei.to_string(),
+                    "stakeWei": stake_wei,
                     "lobbySize": lobby_size,
                 }),
             )
@@ -341,6 +342,88 @@ impl AmpClient {
 
     pub async fn multi_claim(&self, match_id: &str) -> Result<Value> {
         self.post(&format!("/v1/multi/{match_id}/claim"), json!({})).await
+    }
+
+    // ── Exit certificates (multiplayer death certs) ────────────
+
+    /// Submit an exit certificate: an eliminated player signs their rank,
+    /// exit frame, and state hash, then disconnects. Auto-signs EIP-191.
+    pub async fn submit_exit_cert(
+        &self,
+        match_id: &str,
+        rank: u32,
+        exit_frame: u64,
+        state_hash: &str,
+    ) -> Result<Value> {
+        let signature = if let Some(signer) = &self.signer {
+            let msg = crypto::build_exit_cert_message(match_id, rank, exit_frame, state_hash);
+            Some(format!(
+                "0x{}",
+                hex::encode(
+                    signer.sign_message(msg.as_bytes()).await
+                        .map_err(|e| AmpError::Crypto(format!("signing failed: {e}")))?
+                        .as_bytes(),
+                )
+            ))
+        } else {
+            None
+        };
+
+        self.post(
+            &format!("/v1/multi/{match_id}/exit"),
+            json!({ "rank": rank, "exitFrame": exit_frame, "stateHash": state_hash, "signature": signature }),
+        )
+        .await
+    }
+
+    /// A surviving player countersigns an exit certificate, verifying
+    /// the eliminated player's state hash against their own simulation.
+    pub async fn countersign_exit_cert(
+        &self,
+        match_id: &str,
+        wallet: &str,
+        state_hash: &str,
+    ) -> Result<Value> {
+        self.post(
+            &format!("/v1/multi/{match_id}/exit/{wallet}"),
+            json!({ "stateHash": state_hash }),
+        )
+        .await
+    }
+
+    // ── Staked 1v1 escrow ──────────────────────────────────────
+
+    /// Verify on-chain escrow for a staked 1v1 match (participant only).
+    /// Flips an escrow_pending match to live once both deposits check out.
+    pub async fn verify_escrow(&self, match_id: &str) -> Result<Value> {
+        self.post(&format!("/v1/matches/{match_id}/escrow/verify"), json!({}))
+            .await
+    }
+
+    // ── Convenience ────────────────────────────────────────────
+
+    /// One call: queue → wait → matchId. Polls `me().liveMatchId`
+    /// every 2 s. Returns `Err(Other("timeout …"))` on expiry.
+    pub async fn wait_for_match(&self, timeout: std::time::Duration) -> Result<String> {
+        let deadline = tokio::time::Instant::now() + timeout;
+        loop {
+            if let Some(id) = self
+                .me()
+                .await?
+                .get("liveMatchId")
+                .and_then(|v| v.as_str())
+                .filter(|s| !s.is_empty())
+            {
+                return Ok(id.to_string());
+            }
+            if tokio::time::Instant::now() >= deadline {
+                return Err(AmpError::Other(format!(
+                    "wait_for_match timed out after {:?}",
+                    timeout
+                )));
+            }
+            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+        }
     }
 
     // ── Events (WebSocket) ────────────────────────────────────
