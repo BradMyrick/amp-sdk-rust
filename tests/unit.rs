@@ -93,6 +93,22 @@ fn signer_derives_canonical_address() {
 }
 
 #[test]
+fn commit_hash_matches_cross_sdk_golden_vector() {
+    // Identical in the TS/C#/C++/Rust SDKs and amp-server:
+    // keccak256(addr20 ‖ stake_u64_be(8) ‖ salt-utf8)
+    let h = crypto::compute_commit_hash(
+        "0x95CC495dF579981d3Ffa4a8f77B93A17563E077a",
+        1_000_000_000_000_000,
+        "0xdeadbeef",
+    )
+    .unwrap();
+    assert_eq!(
+        h,
+        "0x2d5491f1ad0117eea0c302b3cfb07590fef2d3892349e017361afd1bb5e5be10"
+    );
+}
+
+#[test]
 fn exit_cert_message_matches_server_format() {
     // Load-bearing: the server recovers the signer from this exact string.
     let msg = crypto::build_exit_cert_message("m-42", 3, 1200, "0xabc");
