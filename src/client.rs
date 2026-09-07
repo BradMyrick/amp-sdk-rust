@@ -26,6 +26,8 @@ impl AmpClient {
         Ok(Self {
             http: reqwest::Client::builder()
                 .user_agent("amp-sdk-rust/0.1")
+                .timeout(std::time::Duration::from_secs(30))
+                .connect_timeout(std::time::Duration::from_secs(10))
                 .build()?,
             server: server.trim_end_matches('/').to_string(),
             signer: Some(Arc::new(signer)),
@@ -39,6 +41,8 @@ impl AmpClient {
         Ok(Self {
             http: reqwest::Client::builder()
                 .user_agent("amp-sdk-rust/0.1")
+                .timeout(std::time::Duration::from_secs(30))
+                .connect_timeout(std::time::Duration::from_secs(10))
                 .build()?,
             server: server.trim_end_matches('/').to_string(),
             signer: None,
