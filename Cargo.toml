@@ -1,0 +1,31 @@
+[package]
+name = "amp-sdk"
+version = "0.1.0"
+edition = "2021"
+description = "AMP SDK for Rust — ranked matchmaking, skill ratings, and on-chain settlement for games on Avalanche"
+license = "Apache-2.0"
+repository = "https://github.com/BradMyrick/amp-sdk-rust"
+readme = "README.md"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+tokio-tungstenite = { version = "0.23", features = ["rustls-tls-webpki-roots"] }
+futures-util = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+rand = "0.8"
+hex = "0.4"
+alloy-primitives = "1"
+alloy-signer = { version = "1", features = ["eip712"] }
+alloy-signer-local = { version = "1", features = ["mnemonic"] }
+alloy-dyn-abi = { version = "1", features = ["eip712"] }
+url = "2"
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[[example]]
+name = "quick_start"
+path = "examples/quick_start.rs"
