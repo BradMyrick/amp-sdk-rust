@@ -2,10 +2,12 @@
 
 pub mod client;
 pub mod crypto;
+pub mod tournament;
 pub mod ws;
 
 pub use alloy_signer_local::PrivateKeySigner;
 pub use client::AmpClient;
+pub use tournament::{CanClaimResult, TournamentClient, TournamentData, TournamentState};
 pub use ws::AmpWebSocket;
 
 use thiserror::Error;

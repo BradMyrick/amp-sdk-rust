@@ -2,7 +2,7 @@
 name = "amp-sdk"
 version = "0.1.0"
 edition = "2021"
-description = "AMP SDK for Rust — ranked matchmaking, skill ratings, and on-chain settlement for games on Avalanche"
+description = "AMP SDK for Rust — official Avalanche Tournament & Match Protocol SDK"
 license = "Apache-2.0"
 repository = "https://github.com/BradMyrick/amp-sdk-rust"
 readme = "README.md"
@@ -33,3 +33,7 @@ path = "examples/quick_start.rs"
 [[example]]
 name = "multiplayer"
 path = "examples/multiplayer.rs"
+
+[[example]]
+name = "tournament"
+path = "examples/tournament.rs"
